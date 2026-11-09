@@ -1,0 +1,1141 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0f1012">
+<meta name="robots" content="noindex">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="img/icon-192.png">
+<link rel="apple-touch-icon" href="img/icon-180.png">
+<meta name="apple-mobile-web-app-title" content="Pioneer Trails">
+<title>Pioneer Trails Onboard</title>
+<style>
+  :root {
+    --bg: #0f1012;
+    --surface: #17181b;
+    --surface-2: #1e2023;
+    --surface-3: #26282c;
+    --stroke: rgba(255,255,255,.07);
+    --stroke-2: rgba(255,255,255,.12);
+    --text: #f2f0eb;
+    --text-2: #a8a6a0;
+    --text-3: #6f6d68;
+    --gold: #c4a672;           /* sampled from the Pioneer Trails logo */
+    --gold-2: #d8bf8f;
+    --gold-soft: rgba(196,166,114,.13);
+    --burgundy: #a3202e;       /* coach livery */
+    --ok: #8fb58a;
+    --r: 18px;
+    --ui: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI Variable Text", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --display: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI Variable Display", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font-family: var(--ui); font-size: 15px; line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+  body::before { /* soft graphite falloff at the top of the page */
+    content: ""; position: fixed; inset: 0 0 auto 0; height: 520px; pointer-events: none; z-index: -1;
+    background: radial-gradient(90% 100% at 50% -20%, #25272b 0%, rgba(15,16,18,0) 70%);
+  }
+  a { color: inherit; }
+  button { font: inherit; color: inherit; }
+  .wrap { max-width: 1120px; margin: 0 auto; padding: 0 16px; }
+  @media (min-width: 760px) { .wrap { padding: 0 28px; } }
+  .num { font-variant-numeric: tabular-nums; }
+  .label { font-size: 12px; font-weight: 500; color: var(--text-3); letter-spacing: .02em; }
+  .muted { color: var(--text-2); }
+
+  /* ---------- header ---------- */
+  header.top { position: sticky; top: 0; z-index: 10; background: rgba(15,16,18,.82); backdrop-filter: saturate(140%) blur(14px); -webkit-backdrop-filter: saturate(140%) blur(14px); border-bottom: 1px solid var(--stroke); }
+  .top .bar { display: flex; align-items: center; gap: 16px; height: 64px; }
+  .top .logo { display: block; height: 34px; width: auto; }
+  @media (min-width: 760px) { .top .logo { height: 40px; } }
+  .top .spacer { flex: 1; }
+  .chip {
+    display: inline-flex; align-items: center; gap: 7px; height: 30px; padding: 0 12px; border-radius: 999px;
+    background: var(--surface-2); border: 1px solid var(--stroke); font-size: 13px; color: var(--text-2); white-space: nowrap;
+  }
+  .chip b { color: var(--text); font-weight: 600; }
+  .chip .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--text-3); }
+  .chip.on .dot { background: var(--ok); }
+  .top .clock { font-size: 15px; font-weight: 600; }
+  @media (max-width: 560px) { .top .coach { display: none; } }
+
+  nav.tabs { border-top: 1px solid var(--stroke); }
+  nav.tabs .wrap { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; padding-top: 8px; padding-bottom: 8px; }
+  nav.tabs .wrap::-webkit-scrollbar { display: none; }
+  nav.tabs a {
+    flex: none; text-decoration: none; font-size: 13px; font-weight: 500; color: var(--text-2);
+    padding: 6px 12px; border-radius: 999px; transition: background .15s, color .15s;
+  }
+  nav.tabs a:hover, nav.tabs a.active { background: var(--surface-3); color: var(--text); }
+
+  /* ---------- greeting ---------- */
+  .greet { padding: 28px 0 18px; display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 10px 24px; }
+  .greet h1 { font-family: var(--display); font-size: clamp(30px, 5vw, 44px); line-height: 1.08; font-weight: 600; letter-spacing: -.02em; margin: 0; }
+  .greet p { margin: 6px 0 0; color: var(--text-2); font-size: 16px; }
+  .note { margin: 0 0 16px; padding: 12px 16px; border-radius: 14px; background: var(--gold-soft); border: 1px solid rgba(196,166,114,.25); color: var(--gold-2); font-size: 14px; }
+
+  /* ---------- cards ---------- */
+  .card {
+    background: linear-gradient(180deg, var(--surface-2), var(--surface) 70%);
+    border: 1px solid var(--stroke); border-radius: var(--r); padding: 22px;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.04);
+  }
+  .card h2 { font-family: var(--display); font-size: 20px; font-weight: 600; letter-spacing: -.01em; margin: 0; }
+  .card-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 16px; }
+
+  .card { min-width: 0; }
+  .dash {
+    display: grid; gap: 16px; align-items: start;
+    grid-template-columns: minmax(0, 1.75fr) minmax(0, 1fr);
+    grid-template-rows: auto 1fr;
+    grid-template-areas: "trip wifi" "trip rest";
+  }
+  .dash > #trip { grid-area: trip; }
+  .dash > #wifi { grid-area: wifi; }
+  .dash > #reststop { grid-area: rest; }
+  /* Phones: Wi-Fi first - that's why riders land on this page. */
+  @media (max-width: 900px) { .dash { grid-template-columns: 1fr; grid-template-rows: none; grid-template-areas: "wifi" "trip" "rest"; } }
+
+  /* ---------- journey ---------- */
+  .dest { position: relative; margin: -22px -22px 18px; border-radius: var(--r) var(--r) 0 0; overflow: hidden; aspect-ratio: 21 / 8; background: var(--surface-3); }
+  @media (max-width: 560px) { .dest { aspect-ratio: 16 / 8; } }
+  .dest img { display: block; width: 100%; height: 100%; object-fit: cover; }
+  .dest::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(0,0,0,0) 35%, rgba(23,24,27,.55) 70%, var(--surface-2) 100%); }
+  .dest-cap { position: absolute; left: 22px; right: 22px; bottom: 14px; z-index: 1; }
+  .dest-cap .label { color: rgba(242,240,235,.75); }
+  .dest-cap b { display: block; font-family: var(--display); font-size: clamp(20px, 3.4vw, 26px); font-weight: 600; letter-spacing: -.01em; color: #f6f3ec; text-shadow: 0 1px 12px rgba(0,0,0,.45); }
+  .journey .route { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-2); }
+  .journey .route svg { width: 16px; height: 16px; stroke: var(--text-3); fill: none; stroke-width: 1.8; }
+  .next { display: grid; grid-template-columns: 1fr auto; gap: 4px 18px; align-items: end; margin-top: 6px; }
+  .next .stop { font-family: var(--display); font-size: clamp(30px, 5.5vw, 46px); font-weight: 600; letter-spacing: -.02em; line-height: 1.05; }
+  .next .when { text-align: right; }
+  .next .time { font-family: var(--display); font-size: clamp(22px, 3.6vw, 30px); font-weight: 600; letter-spacing: -.01em; }
+  .next .in { font-size: 14px; color: var(--gold); font-weight: 500; }
+
+  .track { position: relative; height: 54px; margin: 26px 6px 4px; }
+  .track .rail { position: absolute; left: 0; right: 0; top: 24px; height: 6px; border-radius: 6px; background: var(--surface-3); }
+  .track .fill { position: absolute; left: 0; top: 24px; height: 6px; border-radius: 6px; background: linear-gradient(90deg, #8d7650, var(--gold)); width: 0; transition: width 1s ease; }
+  .track .tick { position: absolute; top: 21px; width: 12px; height: 12px; margin-left: -6px; border-radius: 50%; background: var(--surface); border: 2px solid var(--text-3); }
+  .track .tick.done { background: var(--gold); border-color: var(--gold); }
+  .track .tick.rest { width: 10px; height: 10px; top: 22px; margin-left: -5px; border-radius: 3px; }
+  .track .tick.cur { border-color: var(--text); }
+  .track .bus {
+    position: absolute; top: 0; width: 34px; height: 22px; margin-left: -17px; border-radius: 6px;
+    background: var(--text); color: var(--bg); display: grid; place-items: center;
+    box-shadow: 0 4px 14px rgba(0,0,0,.5); transition: left 1s ease;
+  }
+  .track .bus::after { content: ""; position: absolute; bottom: -5px; left: 50%; margin-left: -5px; border: 5px solid transparent; border-top-color: var(--text); border-bottom: 0; }
+  .track .bus svg { width: 20px; height: 14px; fill: currentColor; }
+  .ends { display: flex; justify-content: space-between; gap: 12px; font-size: 13px; }
+  .ends div:last-child { text-align: right; }
+  .ends b { display: block; font-weight: 600; color: var(--text); }
+  .ends span { color: var(--text-3); }
+
+  .stats { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 10px; margin-top: 20px; }
+  .stat { background: var(--bg); border: 1px solid var(--stroke); border-radius: 12px; padding: 12px 14px; }
+  .stat b { display: block; font-size: 17px; font-weight: 600; margin-top: 2px; }
+  @media (max-width: 480px) { .stat b { font-size: 15px; } .stat { padding: 10px 11px; } }
+
+  .toggle {
+    margin-top: 16px; width: 100%; display: flex; align-items: center; justify-content: space-between;
+    background: none; border: 0; border-top: 1px solid var(--stroke); padding: 14px 0 0; cursor: pointer; color: var(--text-2); font-size: 14px; font-weight: 500;
+  }
+  .toggle svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2; transition: transform .2s; }
+  .toggle[aria-expanded="true"] svg { transform: rotate(180deg); }
+  ol.timeline { list-style: none; margin: 14px 0 0; padding: 0; }
+  ol.timeline li { display: grid; grid-template-columns: 18px 1fr auto; gap: 12px; align-items: center; padding: 9px 0; position: relative; }
+  ol.timeline li::before { content: ""; position: absolute; left: 8px; top: 50%; height: 100%; width: 2px; background: var(--surface-3); }
+  ol.timeline li:last-child::before { display: none; }
+  ol.timeline li.done::before { background: rgba(196,166,114,.55); }
+  ol.timeline .d { width: 12px; height: 12px; margin-left: 3px; border-radius: 50%; border: 2px solid var(--text-3); background: var(--surface); position: relative; z-index: 1; }
+  ol.timeline li.done .d { background: var(--gold); border-color: var(--gold); }
+  ol.timeline li.next .d { border-color: var(--text); box-shadow: 0 0 0 4px rgba(242,240,235,.1); }
+  ol.timeline .n { font-size: 15px; }
+  ol.timeline li.done .n, ol.timeline li.done .t { color: var(--text-3); }
+  ol.timeline li.next .n { font-weight: 600; }
+  ol.timeline .t { font-size: 14px; color: var(--text-2); }
+  ol.timeline .rest { font-size: 11px; font-weight: 600; color: var(--gold); background: var(--gold-soft); border-radius: 999px; padding: 2px 8px; margin-left: 8px; vertical-align: 1px; }
+  .fine { margin: 14px 0 0; font-size: 12px; color: var(--text-3); }
+
+  .journey .route { flex-wrap: wrap; }
+  .live-tag { margin-left: auto; display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: var(--ok); background: rgba(143,181,138,.12); border-radius: 999px; padding: 3px 10px; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .live-tag i { width: 7px; height: 7px; border-radius: 50%; background: var(--ok); animation: pulse 2s ease-in-out infinite; flex: none; }
+  @keyframes pulse { 50% { opacity: .35; } }
+  @media (prefers-reduced-motion: reduce) { .live-tag i { animation: none; } }
+  .late-badge { display: inline-block; margin-top: 6px; font-size: 12px; font-weight: 600; border-radius: 999px; padding: 3px 10px; }
+  .late-badge.ontime { color: var(--ok); background: rgba(143,181,138,.12); }
+  .late-badge.late { color: #e7a1a9; background: rgba(163,32,46,.22); }
+  .late-badge.early { color: var(--gold-2); background: var(--gold-soft); }
+  ol.timeline .t s { color: var(--text-3); margin-right: 4px; }
+
+  /* ---------- header cabin controls ---------- */
+  .iconbtn { width: 34px; height: 34px; flex: none; display: grid; place-items: center; border-radius: 999px; border: 1px solid var(--stroke); background: var(--surface-2); color: var(--text-2); cursor: pointer; padding: 0; }
+  .iconbtn svg { width: 17px; height: 17px; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+  .iconbtn[aria-pressed="true"] { color: var(--gold); border-color: rgba(196,166,114,.4); background: var(--gold-soft); }
+  .iconbtn .aa { font-weight: 700; line-height: 1; letter-spacing: -.02em; }
+  .iconbtn .aa small { font-size: 10px; }
+  .iconbtn .aa span { font-size: 15px; }
+  .top .bar { gap: 10px; }
+  @media (max-width: 420px) { .top #wifiChip { display: none; } .top .logo { height: 30px; } }
+
+  /* ---------- arrival prep ---------- */
+  .arrive { margin-bottom: 16px; border-color: rgba(196,166,114,.3); background: linear-gradient(180deg, rgba(196,166,114,.10), var(--surface) 80%); }
+  .arrive .card-head { margin-bottom: 4px; }
+  .arrive .when { font-size: 13px; font-weight: 600; color: var(--gold); white-space: nowrap; }
+  .arrive ul { list-style: none; margin: 12px 0 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 8px 22px; }
+  @media (max-width: 700px) { .arrive ul { grid-template-columns: 1fr; } }
+  .arrive li { display: grid; grid-template-columns: 22px 1fr; gap: 8px; font-size: 14px; color: var(--text-2); }
+  .arrive li svg { width: 18px; height: 18px; margin-top: 2px; stroke: var(--gold); fill: none; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+
+  /* ---------- comfort ---------- */
+  .sounds { display: flex; flex-wrap: wrap; gap: 8px; margin: 14px 0; }
+  .pillbtn { display: inline-flex; align-items: center; gap: 8px; height: 40px; padding: 0 14px; border-radius: 999px; border: 1px solid var(--stroke-2); background: var(--surface-3); cursor: pointer; font-size: 14px; font-weight: 600; color: var(--text-2); }
+  .pillbtn svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; }
+  .pillbtn[aria-pressed="true"] { color: #1a1508; background: linear-gradient(180deg, var(--gold-2), var(--gold)); border-color: transparent; }
+  .sound-row { display: grid; grid-template-columns: auto 1fr auto; gap: 12px; align-items: center; }
+  .sound-row label { font-size: 13px; color: var(--text-3); }
+  input[type=range] { width: 100%; accent-color: var(--gold); }
+  select { font: inherit; font-size: 14px; color: var(--text); background: var(--bg); border: 1px solid var(--stroke-2); border-radius: 10px; height: 38px; padding: 0 10px; color-scheme: dark; }
+  .switch-row { display: grid; grid-template-columns: 1fr auto; gap: 16px; align-items: center; padding: 14px 0; border-top: 1px solid var(--stroke); }
+  .switch-row:first-of-type { border-top: 0; padding-top: 4px; }
+  .switch-row b { display: block; font-size: 15px; font-weight: 600; }
+  .switch-row span { font-size: 13px; color: var(--text-2); }
+  .switch { position: relative; width: 50px; height: 30px; border-radius: 999px; border: 1px solid var(--stroke-2); background: var(--surface-3); cursor: pointer; padding: 0; transition: background .2s; }
+  .switch::after { content: ""; position: absolute; top: 3px; left: 3px; width: 22px; height: 22px; border-radius: 50%; background: var(--text-2); transition: transform .2s, background .2s; }
+  .switch[aria-checked="true"] { background: var(--gold); border-color: transparent; }
+  .switch[aria-checked="true"]::after { transform: translateX(20px); background: #1a1508; }
+
+  /* ---------- cabin lights down (overnight runs) ---------- */
+  html.night {
+    --bg: #0a0a0b; --surface: #101113; --surface-2: #141517; --surface-3: #1b1c1f;
+    --stroke: rgba(255,255,255,.05); --stroke-2: rgba(255,255,255,.08);
+    --text: #cdc6b8; --text-2: #8c877d; --text-3: #5c5952;
+    --gold: #a58c5f; --gold-2: #b49b6c; --gold-soft: rgba(165,140,95,.12); --ok: #74916f;
+  }
+  html.night body::before { opacity: .35; }
+  html.night img, html.night video, html.night .film .frame { filter: brightness(.78); }
+  body, .card, header.top { transition: background-color .8s ease, color .8s ease, border-color .8s ease; }
+  html.night header.top { background: rgba(10,10,11,.86); }
+
+  /* ---------- larger text ---------- */
+  html.big main, html.big footer { zoom: 1.14; }
+  html.big .kv { grid-template-columns: 1fr; }
+  @media (max-width: 480px) {
+    .sound-row { grid-template-columns: auto 1fr; }
+    .sound-row select { grid-column: 1 / -1; width: 100%; }
+  }
+
+  /* ---------- wifi ---------- */
+  .wifi .status { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 999px; background: var(--surface-3); color: var(--text-2); }
+  .wifi .status i { width: 7px; height: 7px; border-radius: 50%; background: var(--text-3); }
+  .wifi.connected .status { background: rgba(143,181,138,.14); color: var(--ok); }
+  .wifi.connected .status i { background: var(--ok); }
+  .wifi .icon { width: 44px; height: 44px; border-radius: 12px; background: var(--gold-soft); display: grid; place-items: center; }
+  .wifi .icon svg { width: 24px; height: 24px; stroke: var(--gold); fill: none; stroke-width: 2; stroke-linecap: round; }
+  .kv { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 10px; margin: 16px 0; }
+  @media (min-width: 901px) and (max-width: 1100px) { .kv { grid-template-columns: 1fr; } }
+  .kv div { background: var(--bg); border: 1px solid var(--stroke); border-radius: 12px; padding: 10px 12px; min-width: 0; }
+  .kv b { display: block; font-size: 15px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer; text-decoration: none;
+    height: 48px; padding: 0 20px; border-radius: 14px; border: 1px solid var(--stroke-2); background: var(--surface-3);
+    font-size: 15px; font-weight: 600; transition: filter .15s, transform .1s;
+  }
+  .btn:active { transform: scale(.985); }
+  .btn.primary { background: linear-gradient(180deg, var(--gold-2), var(--gold)); color: #1a1508; border-color: transparent; }
+  .btn.primary:hover { filter: brightness(1.06); }
+  .btn.block { width: 100%; }
+  .btn[disabled] { opacity: .6; cursor: default; }
+  .wifi .terms { margin: 10px 0 0; font-size: 12px; color: var(--text-3); text-align: center; }
+  .wifi .terms a { color: var(--text-2); }
+  .wifi .done-msg { display: none; margin: 4px 0 0; color: var(--text-2); font-size: 14px; }
+  .wifi.connected .done-msg { display: block; }
+  .wifi.connected .pre { display: none; }
+
+  /* ---------- rest stop ---------- */
+  .rest-card .body { display: flex; align-items: center; gap: 18px; margin-bottom: 16px; }
+  .ring { position: relative; width: 104px; height: 104px; flex: none; }
+  .ring svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+  .ring circle { fill: none; stroke-width: 8; }
+  .ring .bg { stroke: var(--surface-3); }
+  .ring .fg { stroke: var(--gold); stroke-linecap: round; transition: stroke-dashoffset .9s linear; }
+  .ring.late .fg { stroke: var(--burgundy); }
+  .ring .mid { position: absolute; inset: 0; display: grid; place-items: center; text-align: center; }
+  .ring .mid b { display: block; font-size: 22px; font-weight: 600; line-height: 1; }
+  .ring .mid span { font-size: 11px; color: var(--text-3); }
+  .rest-card .ctrl { flex: 1; min-width: 0; margin: 0; color: var(--text-2); font-size: 14px; }
+  .rest-card .row { display: flex; gap: 8px; }
+  input[type=time] {
+    min-width: 0; flex: 1; height: 44px; font: inherit; font-size: 17px; font-weight: 600; color: var(--text);
+    background: var(--bg); border: 1px solid var(--stroke-2); border-radius: 12px; padding: 0 12px; color-scheme: dark;
+  }
+  .rest-card .btn { height: 44px; padding: 0 16px; }
+
+  /* ---------- sections ---------- */
+  section.block { padding-top: 40px; scroll-margin-top: 120px; }
+  .sec-head { display: flex; align-items: end; justify-content: space-between; gap: 16px; margin-bottom: 14px; }
+  .sec-head h2 { font-family: var(--display); font-size: 24px; font-weight: 600; letter-spacing: -.015em; margin: 0; }
+  .sec-head p { margin: 0; color: var(--text-2); font-size: 14px; }
+  @media (max-width: 640px) { .sec-head { display: block; } .sec-head p { margin-top: 4px; } }
+  .grid { display: grid; gap: 16px; }
+  .g2 { grid-template-columns: repeat(2, minmax(0,1fr)); }
+  .g3 { grid-template-columns: repeat(3, minmax(0,1fr)); }
+  @media (max-width: 760px) { .g2, .g3 { grid-template-columns: 1fr; } }
+
+  /* ---------- films ---------- */
+  .film { padding: 0; overflow: hidden; }
+  .film .frame { position: relative; aspect-ratio: 16 / 9; background: #000; }
+  .film video { display: block; width: 100%; height: 100%; object-fit: cover; background: #000; }
+  .film .meta { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 16px 20px 18px; }
+  .film h3 { margin: 0; font-size: 17px; font-weight: 600; }
+  .film .meta p { margin: 2px 0 0; font-size: 13px; color: var(--text-2); }
+  .pill { flex: none; font-size: 12px; font-weight: 600; color: var(--text-2); background: var(--surface-3); border-radius: 999px; padding: 4px 10px; }
+  .fallback { position: absolute; inset: 0; display: none; flex-direction: column; justify-content: center; padding: 20px 24px; background: linear-gradient(160deg, #24262a, #141517); }
+  .film.novideo .fallback { display: flex; }
+  .film.novideo video { visibility: hidden; }
+  .fallback ol { margin: 0; padding: 0; list-style: none; counter-reset: s; columns: 2; column-gap: 24px; }
+  .fallback li { counter-increment: s; break-inside: avoid; font-size: 14px; color: var(--text-2); padding: 5px 0 5px 30px; position: relative; line-height: 1.4; }
+  .fallback li::before { content: counter(s); position: absolute; left: 0; top: 4px; width: 20px; height: 20px; border-radius: 50%; background: var(--gold-soft); color: var(--gold); font-size: 11px; font-weight: 700; display: grid; place-items: center; }
+  @media (max-width: 560px) { .fallback { position: static; } .film.novideo .frame { aspect-ratio: auto; } .film.novideo video { display: none; } .fallback ol { columns: 1; } }
+
+  /* ---------- amenities ---------- */
+  .amen { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 12px; }
+  @media (max-width: 860px) { .amen { grid-template-columns: repeat(2, minmax(0,1fr)); } }
+  @media (max-width: 480px) { .amen { grid-template-columns: 1fr; } }
+  .amen .card { padding: 18px; display: grid; grid-template-columns: 40px 1fr; gap: 14px; align-items: start; }
+  .amen .ic { width: 40px; height: 40px; border-radius: 11px; background: var(--surface-3); display: grid; place-items: center; }
+  .amen svg { width: 22px; height: 22px; stroke: var(--gold); fill: none; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+  .amen h3 { margin: 0; font-size: 15px; font-weight: 600; }
+  .amen p { margin: 2px 0 0; font-size: 14px; color: var(--text-2); }
+
+  /* ---------- etiquette / luggage ---------- */
+  ul.list { list-style: none; margin: 12px 0 0; padding: 0; }
+  ul.list li { display: grid; grid-template-columns: 22px 1fr; gap: 10px; padding: 10px 0; border-top: 1px solid var(--stroke); color: var(--text-2); font-size: 14px; }
+  ul.list li:first-child { border-top: 0; }
+  ul.list li svg { width: 18px; height: 18px; margin-top: 2px; stroke: var(--gold); fill: none; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+  ul.list b { color: var(--text); font-weight: 600; }
+
+  .acc { padding: 6px 22px; }
+  details { border-top: 1px solid var(--stroke); }
+  details:first-child { border-top: 0; }
+  summary { cursor: pointer; padding: 16px 0; list-style: none; display: flex; align-items: center; justify-content: space-between; gap: 10px; font-size: 16px; font-weight: 600; }
+  summary::-webkit-details-marker { display: none; }
+  summary svg { width: 18px; height: 18px; stroke: var(--text-3); fill: none; stroke-width: 2; flex: none; transition: transform .2s; }
+  details[open] summary svg { transform: rotate(180deg); }
+  details .body { padding: 0 0 16px; color: var(--text-2); font-size: 14px; }
+  details ul { margin: 0; padding-left: 18px; }
+  details li { margin-bottom: 6px; }
+  details li::marker { color: var(--gold); }
+
+  /* ---------- travel again ---------- */
+  .call { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 14px; margin-bottom: 16px; }
+  .call .big { font-family: var(--display); font-size: clamp(26px, 5vw, 34px); font-weight: 600; letter-spacing: -.01em; text-decoration: none; }
+  a.offer { display: flex; flex-direction: column; text-decoration: none; transition: border-color .15s, transform .15s; }
+  a.offer:hover { border-color: var(--stroke-2); transform: translateY(-2px); }
+  .offer .tag { font-size: 12px; font-weight: 600; color: var(--gold); }
+  .offer h3 { margin: 6px 0 0; font-size: 18px; font-weight: 600; letter-spacing: -.01em; }
+  .offer p { flex: 1; margin: 6px 0 14px; font-size: 14px; color: var(--text-2); }
+  .offer .go { font-size: 14px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; }
+  .offer .go svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2; }
+
+  footer { margin-top: 56px; border-top: 1px solid var(--stroke); }
+  footer .wrap { padding-top: 28px; padding-bottom: calc(32px + env(safe-area-inset-bottom)); display: grid; grid-template-columns: 1.3fr 1fr 1fr 1fr; gap: 24px; font-size: 14px; color: var(--text-2); }
+  footer img { height: 44px; width: auto; display: block; margin-bottom: 10px; }
+  footer h4 { margin: 0 0 6px; font-size: 12px; font-weight: 600; color: var(--text-3); }
+  footer a { text-decoration: none; }
+  footer a:hover { color: var(--text); }
+  @media (max-width: 760px) { footer .wrap { grid-template-columns: 1fr 1fr; } footer .brand { grid-column: 1 / -1; } }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap bar">
+    <img class="logo" src="img/logo-gold.png" alt="Pioneer Trails">
+    <span class="spacer"></span>
+    <span class="chip coach" id="coachChip" hidden></span>
+    <span class="chip" id="wifiChip"><span class="dot"></span><span id="wifiChipText">Wi-Fi</span></span>
+    <button class="iconbtn" id="textBtn" type="button" aria-pressed="false" title="Larger text" aria-label="Larger text"><span class="aa"><small>A</small><span>A</span></span></button>
+    <button class="iconbtn" id="lightsBtn" type="button" aria-pressed="false" title="Cabin lights down" aria-label="Cabin lights down"><svg viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></svg></button>
+    <span class="clock num" id="clock">--:--</span>
+  </div>
+  <nav class="tabs" aria-label="Sections">
+    <div class="wrap">
+      <a href="#today">Today</a>
+      <a href="#comfort">Comfort</a>
+      <a href="#films">Safety films</a>
+      <a href="#onboard">On board</a>
+      <a href="#etiquette">Etiquette</a>
+      <a href="#luggage">Luggage</a>
+      <a href="#again">Travel again</a>
+    </div>
+  </nav>
+</header>
+
+<main class="wrap">
+
+  <div class="greet" id="today">
+    <div>
+      <h1 id="greeting">Welcome aboard</h1>
+      <p id="subgreet">Sit back and enjoy the ride. Everything for your trip is right here.</p>
+    </div>
+  </div>
+  <div class="note" id="driverNote" hidden></div>
+
+  <div class="card arrive" id="arrive" hidden aria-live="polite">
+    <div class="card-head"><h2 id="arriveTitle">Preparing for arrival</h2><span class="when num" id="arriveWhen"></span></div>
+    <ul>
+      <li><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg><span>Gather your things: seat pocket, overhead bin and under your seat.</span></li>
+      <li><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg><span>Trash goes in the bag when it comes through the coach.</span></li>
+      <li><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg><span>Stay seated until the coach stops and the driver opens the door.</span></li>
+      <li><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg><span>Checked bags come out of the bays under the coach. Wait for the driver and stand clear.</span></li>
+    </ul>
+  </div>
+
+  <div class="dash">
+    <!-- JOURNEY -->
+    <div class="card journey" id="trip">
+      <div class="dest" id="dest" hidden>
+        <img id="destImg" alt="">
+        <div class="dest-cap"><span class="label">Heading to</span><b id="destName"></b></div>
+      </div>
+      <div class="route">
+        <svg viewBox="0 0 24 24"><path d="M4 17V7a3 3 0 0 1 3-3h10a3 3 0 0 1 3 3v10M4 13h16M7 20v-3M17 20v-3"/></svg>
+        <span id="routeLine">Your journey</span>
+        <span class="live-tag" id="liveTag" hidden><i></i><span id="liveText">Live</span></span>
+      </div>
+      <div class="next">
+        <div>
+          <div class="label" id="nowLabel">Next stop</div>
+          <div class="stop" id="nowStop">&nbsp;</div>
+        </div>
+        <div class="when">
+          <div class="time num" id="nowTime">&nbsp;</div>
+          <div class="in num" id="nowIn"></div>
+          <span class="late-badge" id="lateBadge" hidden></span>
+        </div>
+      </div>
+
+      <div class="track" id="track" role="progressbar" aria-label="Journey progress">
+        <div class="rail"></div>
+        <div class="fill" id="fill"></div>
+        <div id="ticks"></div>
+        <div class="bus" id="busMark" title="Your coach">
+          <svg viewBox="0 0 20 14"><path d="M3 1h14a2 2 0 0 1 2 2v7a1 1 0 0 1-1 1h-1a2 2 0 0 1-4 0H7a2 2 0 0 1-4 0H2a1 1 0 0 1-1-1V3a2 2 0 0 1 2-2zm0 2v3h4V3zm5 0v3h4V3zm5 0v3h4V3z"/></svg>
+        </div>
+      </div>
+      <div class="ends">
+        <div><b id="endA"></b><span class="num" id="endAt"></span></div>
+        <div><b id="endB"></b><span class="num" id="endBt"></span></div>
+      </div>
+
+      <div class="stats">
+        <div class="stat"><span class="label" id="stToLabel">To destination</span><b class="num" id="stPct">-</b></div>
+        <div class="stat"><span class="label">Stops</span><b class="num" id="stStops">-</b></div>
+        <div class="stat"><span class="label">Arrival</span><b class="num" id="stArr">-</b></div>
+      </div>
+
+      <button class="toggle" id="toggleStops" aria-expanded="false" aria-controls="timeline">
+        <span>All stops</span>
+        <svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>
+      </button>
+      <ol class="timeline" id="timeline" hidden></ol>
+      <p class="fine" id="fineText">Scheduled times for this run. Your driver announces each stop.</p>
+    </div>
+
+      <!-- WIFI -->
+      <div class="card wifi" id="wifi" aria-live="polite">
+        <div class="card-head">
+          <div class="icon"><svg viewBox="0 0 24 24"><path d="M2 8.8a15 15 0 0 1 20 0M5 12.6a10 10 0 0 1 14 0M8.5 16.3a5 5 0 0 1 7 0"/><circle cx="12" cy="19.5" r="1" fill="currentColor"/></svg></div>
+          <span class="status"><i></i><span id="wifiStatus">Not connected</span></span>
+        </div>
+        <h2>Complimentary Wi-Fi</h2>
+        <div class="pre">
+          <div class="kv">
+            <div><span class="label">Network</span><b id="wifiName">-</b></div>
+            <div><span class="label">Password</span><b id="wifiPass">-</b></div>
+          </div>
+          <button class="btn primary block" id="connectBtn" type="button">Connect</button>
+          <p class="terms">By connecting you agree to the <a href="#etiquette">coach etiquette</a>.</p>
+        </div>
+        <p class="done-msg" id="connNote">You're online for the rest of the trip.</p>
+      </div>
+
+      <!-- REST STOP -->
+      <div class="card rest-card" id="reststop">
+        <div class="card-head"><h2>Rest stop timer</h2></div>
+        <div class="body">
+          <div class="ring" id="ring">
+            <svg viewBox="0 0 120 120"><circle class="bg" cx="60" cy="60" r="52"/><circle class="fg" id="ringFg" cx="60" cy="60" r="52" stroke-dasharray="326.7" stroke-dashoffset="326.7"/></svg>
+            <div class="mid"><div><b class="num" id="ringTime">--:--</b><span id="ringSub">not set</span></div></div>
+          </div>
+          <p class="ctrl">At a stop, enter the time the driver gives you to be back on the coach.</p>
+        </div>
+        <div class="row">
+          <input type="time" id="backBy" aria-label="Back on the coach by">
+          <button class="btn primary" id="setTimer" type="button">Start</button>
+          <button class="btn" id="clearTimer" type="button" hidden>Clear</button>
+        </div>
+      </div>
+  </div>
+
+  <!-- COMFORT -->
+  <section class="block" id="comfort">
+    <div class="sec-head"><h2>Cabin comfort</h2><p>Settle in for the ride.</p></div>
+    <div class="grid g2">
+      <div class="card">
+        <div class="card-head"><h2>Sleep sounds</h2><span class="label">Headphones, please</span></div>
+        <p class="muted" style="margin:0;font-size:14px">Soft background sound to rest by. It plays on your phone only.</p>
+        <div class="sounds" role="group" aria-label="Sleep sounds">
+          <button class="pillbtn" type="button" data-sound="hum" aria-pressed="false"><svg viewBox="0 0 24 24"><path d="M3 12h2M7 9v6M11 6v12M15 9v6M19 11v2"/></svg>Cabin hum</button>
+          <button class="pillbtn" type="button" data-sound="rain" aria-pressed="false"><svg viewBox="0 0 24 24"><path d="M7 15l-2 4M12 15l-2 4M17 15l-2 4M6 12a5 5 0 1 1 9.6-2A3.5 3.5 0 1 1 17 12z"/></svg>Soft rain</button>
+          <button class="pillbtn" type="button" data-sound="ocean" aria-pressed="false"><svg viewBox="0 0 24 24"><path d="M2 14c2.5 0 2.5-2 5-2s2.5 2 5 2 2.5-2 5-2 2.5 2 5 2M2 18c2.5 0 2.5-2 5-2s2.5 2 5 2 2.5-2 5-2 2.5 2 5 2"/></svg>Ocean</button>
+        </div>
+        <div class="sound-row">
+          <label for="vol">Volume</label>
+          <input type="range" id="vol" min="0" max="100" value="45">
+          <select id="sleepTimer" aria-label="Turn off after">
+            <option value="0">No timer</option>
+            <option value="30">Off in 30 min</option>
+            <option value="60" selected>Off in 1 hour</option>
+            <option value="120">Off in 2 hours</option>
+          </select>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-head"><h2>Your screen</h2></div>
+        <div class="switch-row">
+          <div><b>Cabin lights down</b><span>A dimmer, warmer screen for night riding. Comes on by itself from 9 PM to 6 AM.</span></div>
+          <button class="switch" id="lightsSwitch" type="button" role="switch" aria-checked="false" aria-label="Cabin lights down"></button>
+        </div>
+        <div class="switch-row">
+          <div><b>Larger text</b><span>Everything on this page a size up.</span></div>
+          <button class="switch" id="textSwitch" type="button" role="switch" aria-checked="false" aria-label="Larger text"></button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FILMS -->
+  <section class="block" id="films">
+    <div class="sec-head">
+      <h2>Safety films</h2>
+      <p>About a minute each. They play from the coach, so no Wi-Fi needed.</p>
+    </div>
+    <div class="grid g2">
+      <article class="card film" id="filmSafety">
+        <div class="frame">
+          <video controls playsinline preload="metadata" src="videos/safety.mp4" poster="videos/safety.jpg"></video>
+          <div class="fallback">
+            <ol>
+              <li>Stay seated while the coach is moving. If your seat has a belt, wear it.</li>
+              <li>Keep the aisle clear of bags, feet and blankets.</li>
+              <li>Small bags only overhead. Bins are smaller than an airplane's.</li>
+              <li>Hold the handrails when walking to the restroom.</li>
+              <li>Window exits: pull the release bar, push hard at the bottom, climb out feet first.</li>
+              <li>In an emergency, stay calm and follow your driver.</li>
+            </ol>
+          </div>
+        </div>
+        <div class="meta">
+          <div><h3>Your safety on board</h3><p>Exits, aisles, bins and what to do in an emergency</p></div>
+          <span class="pill num" data-len></span>
+        </div>
+      </article>
+      <article class="card film" id="filmClean">
+        <div class="frame">
+          <video controls playsinline preload="metadata" src="videos/cleanup.mp4" poster="videos/cleanup.jpg"></video>
+          <div class="fallback">
+            <ol>
+              <li>Your driver passes a trash bag back through the coach.</li>
+              <li>Drop your trash in and hand it to the row behind you.</li>
+              <li>Spill something? Tell the driver at the next stop.</li>
+            </ol>
+          </div>
+        </div>
+        <div class="meta">
+          <div><h3>Keeping the coach clean</h3><p>How the trash bag makes its way down the aisle</p></div>
+          <span class="pill num" data-len></span>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <!-- ON BOARD -->
+  <section class="block" id="onboard">
+    <div class="sec-head"><h2>On board</h2></div>
+    <div class="amen">
+      <div class="card"><div class="ic"><svg viewBox="0 0 24 24"><path d="M9 3v5M15 3v5M6 8h12v4a6 6 0 0 1-12 0zM12 18v3"/></svg></div>
+        <div><h3>Power at your seat</h3><p>Outlets throughout the cabin. Bring your own cord.</p></div></div>
+      <div class="card"><div class="ic"><svg viewBox="0 0 24 24"><path d="M7 20V10L5 4M7 10h8l2 10M7 15h9M15 10l3-5"/></svg></div>
+        <div><h3>Reclining seats</h3><p>Check behind you first, and bring it up for meal stops.</p></div></div>
+      <div class="card"><div class="ic"><svg viewBox="0 0 24 24"><rect x="6" y="3" width="12" height="18" rx="2"/><circle cx="12" cy="8" r="2"/><path d="M9 13h6v5H9z"/></svg></div>
+        <div><h3>Restroom</h3><p>At the rear. Hold the rail while we're moving.</p></div></div>
+      <div class="card"><div class="ic"><svg viewBox="0 0 24 24"><path d="M12 3v18M5 6.5l14 11M19 6.5l-14 11"/></svg></div>
+        <div><h3>Climate control</h3><p>Too warm or cool? Tell your driver at the next stop.</p></div></div>
+      <div class="card"><div class="ic"><svg viewBox="0 0 24 24"><path d="M3 6h18v5H3zM5 11v7h14v-7"/></svg></div>
+        <div><h3>Overhead bins</h3><p>Small bags only. CPAP machines ride up here with you.</p></div></div>
+      <div class="card"><div class="ic"><svg viewBox="0 0 24 24"><path d="M8 3h8l-1 18H9zM8.5 8h7"/></svg></div>
+        <div><h3>Food &amp; drink</h3><p>Welcome on board. Lids on cups, wrappers in the bag.</p></div></div>
+    </div>
+  </section>
+
+  <!-- ETIQUETTE -->
+  <section class="block" id="etiquette">
+    <div class="sec-head"><h2>Coach etiquette</h2></div>
+    <div class="grid g2">
+      <div class="card">
+        <h2 style="font-size:17px">Keeping it clean</h2>
+        <ul class="list">
+          <li><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg><span>Your driver <b>passes a trash bag back through the coach</b>. Add yours and hand it to the row behind you.</span></li>
+          <li><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg><span>Spilled something? Tell the driver at the next stop.</span></li>
+          <li><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg><span>Keep the aisle clear of bags, feet and blankets.</span></li>
+        </ul>
+      </div>
+      <div class="card">
+        <h2 style="font-size:17px">While we're moving</h2>
+        <ul class="list">
+          <li><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg><span>Stay seated when you can. If your seat has a belt, wear it.</span></li>
+          <li><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg><span>Headphones for music and video. Keep calls short and quiet.</span></li>
+          <li><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg><span>In an emergency, follow your driver. Exits are marked on windows and roof hatches.</span></li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- LUGGAGE -->
+  <section class="block" id="luggage">
+    <div class="sec-head"><h2>Luggage &amp; policies</h2><p>Florida Line Run</p></div>
+    <div class="card acc">
+      <details open>
+        <summary>What's included <svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></summary>
+        <div class="body"><ul>
+          <li>Two checked bags beneath the coach, plus one small carry-on that fits overhead or under your seat.</li>
+          <li>Suitcases up to 55 lbs, about 27" x 21" x 14". Standard luggage tops out at 31".</li>
+          <li>Your own items only. Items for people not riding pay freight charges.</li>
+        </ul></div>
+      </details>
+      <details>
+        <summary>Extra, oversized or heavy items <svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></summary>
+        <div class="body"><ul>
+          <li>Extra pieces travel as space allows. The fee is set by size and weight and paid to the driver on the day of travel.</li>
+          <li>Coolers, tubs, chairs, strollers and similar count as more than one piece.</li>
+          <li>Anything over 55 lbs is an additional $30, determined by weight.</li>
+          <li>Golf clubs, bicycles and bike trailers are freight. Freight can't be booked ahead, and is only picked up and dropped off at passenger stops.</li>
+          <li>No bicycles in busy season, roughly November through April.</li>
+        </ul></div>
+      </details>
+      <details>
+        <summary>Not permitted <svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></summary>
+        <div class="body"><ul><li>E-bike lithium batteries. U.S. safety law doesn't allow us to carry them.</li></ul></div>
+      </details>
+      <details>
+        <summary>Changes &amp; cancellations <svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></summary>
+        <div class="body"><ul>
+          <li>Cancel at least 7 days before departure for a credit or refund. Card refunds are less a 3% processing fee.</li>
+          <li>Any change to a reservation (dates, names, boarding or drop-off stop) carries a $20 service charge.</li>
+        </ul></div>
+      </details>
+    </div>
+  </section>
+
+  <!-- TRAVEL AGAIN -->
+  <section class="block" id="again">
+    <div class="sec-head"><h2>Travel with us again</h2></div>
+    <div class="card call">
+      <div>
+        <div class="label">Florida Line Run reservations, by phone</div>
+        <a class="big num" href="tel:18004582554">1-800-458-2554</a>
+      </div>
+      <span class="chip">Mon-Fri &middot; 8 AM-4:30 PM</span>
+    </div>
+    <div class="grid g3">
+      <a class="card offer" href="https://pioneertrailsbus.com/services/charters/" target="_blank" rel="noopener">
+        <span class="tag">Charters</span>
+        <h3>Bring your own group</h3>
+        <p>School and team trips, weddings, day trips and events, anywhere in the continental U.S. and Canada.</p>
+        <span class="go">Request a quote <svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+      </a>
+      <a class="card offer" href="https://pioneertrailsbus.com/services/green-country-tours/" target="_blank" rel="noopener">
+        <span class="tag">Tours</span>
+        <h3>Green Country, Swiss Valley &amp; Eagle Rock</h3>
+        <p>Three tour companies under one roof, with a lineup for every interest.</p>
+        <span class="go">See the tours <svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+      </a>
+      <a class="card offer" href="https://pioneertrailsbus.com/services/lighthouse-tours/" target="_blank" rel="noopener">
+        <span class="tag">Custom tours</span>
+        <h3>Lighthouse Tours</h3>
+        <p>Custom tour planning, built around what your group wants to see and do.</p>
+        <span class="go">Plan a tour <svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+      </a>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <div class="brand">
+      <img src="img/logo-light.png" alt="Pioneer Trails">
+      Family-run motorcoach travel since 1984.
+    </div>
+    <div>
+      <h4>Office</h4>
+      7572 State Route 241<br>Millersburg, OH 44654<br>and Parkersburg, WV
+    </div>
+    <div>
+      <h4>Contact</h4>
+      <a href="tel:18004582554">800-458-2554</a><br>
+      <a href="mailto:info@pioneertrailsbus.com">info@pioneertrailsbus.com</a><br>
+      Mon-Fri, 8 AM-4:30 PM
+    </div>
+    <div>
+      <h4>Online</h4>
+      <a href="https://pioneertrailsbus.com/" target="_blank" rel="noopener">pioneertrailsbus.com</a><br>
+      <a href="https://www.facebook.com/pioneertrailsbus/" target="_blank" rel="noopener">Facebook</a><br>
+      <a href="https://www.instagram.com/pioneer_trails" target="_blank" rel="noopener">Instagram</a>
+    </div>
+  </div>
+</footer>
+
+<script src="trip.js"></script>
+<script>
+(function () {
+  var T = window.TRIP || { stops: [] };
+  var $ = function (id) { return document.getElementById(id); };
+  var pad = function (n) { return (n < 10 ? "0" : "") + n; };
+  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
+  function store(k, v) { try { if (v === undefined) return localStorage.getItem(k); v === null ? localStorage.removeItem(k) : localStorage.setItem(k, v); } catch (e) { return null; } }
+  function fmt(d) { var h = d.getHours(), ap = h < 12 ? "AM" : "PM"; return (h % 12 || 12) + ":" + pad(d.getMinutes()) + " " + ap; }
+  function day(d) { return d.toLocaleDateString(undefined, { weekday: "short" }); }
+  function dur(ms) {
+    var m = Math.max(0, Math.round(ms / 60000)), h = Math.floor(m / 60); m = m % 60;
+    return h ? h + " h " + m + " min" : m + " min";
+  }
+  function stopDate(s) {
+    var p = (T.date || "").split("-").map(Number), hm = (s.time || "0:0").split(":").map(Number);
+    return new Date(p[0], (p[1] || 1) - 1, (p[2] || 1) + (s.day || 0), hm[0], hm[1]);
+  }
+  var clean = function (n) { return n.replace(/^Rest stop - /, ""); };
+
+  // ---- header + greeting ----
+  if (T.coach) { $("coachChip").innerHTML = "Coach <b>" + esc(T.coach) + "</b>"; $("coachChip").hidden = false; }
+  $("routeLine").textContent = [T.service, T.direction].filter(Boolean).join(" · ") || "Your journey";
+  if (T.driver) $("subgreet").textContent = "Your driver today is " + T.driver + ". Everything for your trip is right here.";
+  if (T.driverNote) { $("driverNote").textContent = T.driverNote; $("driverNote").hidden = false; }
+  // greeting: see applyCabin()
+
+  // ---- wifi connect (captive-portal hand-off) ----
+  var W = T.wifi || {};
+  $("wifiName").textContent = W.name || "Ask your driver";
+  $("wifiPass").textContent = W.password || "None needed";
+  var qs = new URLSearchParams(location.search);
+
+  function connectTarget() {
+    var auth = qs.get("authaction"), tok = qs.get("tok");
+    if (auth && tok) {                              // nodogsplash / openNDS
+      var u = new URL(auth, location.href);
+      u.searchParams.set("tok", tok);
+      var redir = W.afterConnectUrl || qs.get("redir");
+      if (redir) u.searchParams.set("redir", redir);
+      return u.toString();
+    }
+    if (W.connectUrl) {                             // other gateways
+      var c = new URL(W.connectUrl, location.href);
+      qs.forEach(function (v, k) { if (!c.searchParams.has(k)) c.searchParams.set(k, v); });
+      return c.toString();
+    }
+    return null;
+  }
+  function showConnected(note) {
+    $("wifi").classList.add("connected");
+    $("wifiStatus").textContent = "Connected";
+    $("wifiChip").classList.add("on");
+    $("wifiChipText").textContent = "Online";
+    if (note) $("connNote").textContent = note;
+  }
+  // Only say "connected" when the router sends the rider back with ?connected=1.
+  if (qs.get("connected") === "1") showConnected();
+  $("wifiChip").onclick = function () { $("wifi").scrollIntoView({ behavior: "smooth", block: "center" }); };
+  $("connectBtn").onclick = function () {
+    var target = connectTarget();
+    if (target) {
+      $("connectBtn").disabled = true;
+      $("connectBtn").textContent = "Connecting…";
+      location.href = target;
+    } else {
+      showConnected("Preview only: no router sign-in is set up in trip.js, so nothing was switched on.");
+    }
+  };
+
+  // ---- films ----
+  Array.prototype.forEach.call(document.querySelectorAll(".film"), function (f) {
+    var v = f.querySelector("video"), len = f.querySelector("[data-len]");
+    function missing() { f.classList.add("novideo"); len.textContent = "Read · 30 sec"; }
+    v.addEventListener("loadedmetadata", function () {
+      var s = Math.round(v.duration);
+      if (isFinite(s)) len.textContent = Math.floor(s / 60) + ":" + pad(s % 60);
+    });
+    v.addEventListener("error", missing);
+    if (v.error) missing();
+    v.addEventListener("play", function () {
+      Array.prototype.forEach.call(document.querySelectorAll(".film video"), function (o) { if (o !== v) o.pause(); });
+    });
+  });
+
+  // ---- journey: live from Samsara (via the relay) or the trip.js schedule ----
+  // Every stop is { name, rest, sched, est, dep, state }. sched places the stop
+  // on the track; est is the best known time (actual arrival, else ETA, else
+  // schedule); state is Samsara's stop state, or worked out from the clock.
+  var LIVE = T.live || {};
+  var liveUrl = qs.get("live") || LIVE.url || "";
+  var refreshMs = Math.max(15, LIVE.refreshSeconds || 30) * 1000;
+  var schedStops = (T.stops || []).map(function (s) { var d = stopDate(s); return { name: s.name, rest: !!s.rest, sched: d, est: d, dep: null }; });
+  var live = null, liveAt = 0, liveDriver = null;
+
+  function pollLive() {
+    if (!liveUrl || !T.coach) return;
+    var u = new URL(liveUrl, location.href);
+    u.searchParams.set("coach", T.coach);
+    fetch(u.toString(), { cache: "no-store" }).then(function (r) { return r.ok ? r.json() : Promise.reject(r.status); }).then(function (j) {
+      if (!j || !j.stops || j.stops.length < 2) return;
+      var D = function (x) { return x ? new Date(x) : null; };
+      live = {
+        updated: D(j.updated) || new Date(), vehicle: j.vehicle || null,
+        finished: !!(j.route && j.route.finished),
+        stops: j.stops.map(function (s) {
+          var sched = D(s.scheduledArrival), arr = D(s.actualArrival), eta = D(s.eta);
+          return { name: s.name, rest: !!s.rest, sched: sched || eta || arr, est: arr || eta || sched, dep: D(s.actualDeparture), state: s.state };
+        }).filter(function (s) { return s.sched; })
+      };
+      liveAt = Date.now();
+      if (!T.driver && j.route && j.route.driver && liveDriver !== j.route.driver) {
+        liveDriver = j.route.driver;
+        applyCabin(new Date());
+      }
+    }).catch(function () { /* keep the last good data for a while, then fall back */ });
+  }
+  pollLive();
+  setInterval(pollLive, refreshMs);
+
+  function model(now) {
+    if (live && Date.now() - liveAt < 5 * 60000 && live.stops.length > 1) return { live: true, stops: live.stops, src: live };
+    return { live: false, stops: schedStops.map(function (s) {
+      return { name: s.name, rest: s.rest, sched: s.sched, est: s.est, dep: null, state: s.sched <= now ? "departed" : "scheduled" };
+    }) };
+  }
+
+  if (!schedStops.length && !liveUrl) $("trip").hidden = true;
+  var ticksKey = "";
+
+  // Destination photo: trip.js "photo", else img/dest/<state>.jpg from the
+  // final stop ("Sarasota, FL" -> img/dest/fl.jpg). No file = no banner.
+  var destFor = null;
+  function setDest(name) {
+    if (name === destFor) return;
+    destFor = name;
+    var m = /,\s*([A-Za-z]{2})\b/.exec(name || "");
+    var src = T.photo || (m ? "img/dest/" + m[1].toLowerCase() + ".jpg" : "");
+    $("destName").textContent = clean(name || "");
+    if (!src) { $("dest").hidden = true; return; }
+    var img = $("destImg");
+    img.onload = function () { $("dest").hidden = false; };
+    img.onerror = function () { $("dest").hidden = true; };
+    img.src = src;
+  }
+
+  // "Preparing for arrival" for any passenger stop within 30 minutes
+  function arrivePrep(nx, nextIdx, now) {
+    var show = nx && nextIdx > 0 && !nx.rest && (nx.state === "arrived" || (nx.est - now <= 30 * 60000 && nx.est - now > -10 * 60000));
+    $("arrive").hidden = !show;
+    if (!show) return;
+    $("arriveTitle").textContent = "Getting off at " + clean(nx.name).split(",")[0] + "?";
+    $("arriveWhen").textContent = nx.state === "arrived" ? "We're here" : (nx.est > now ? "About " + dur(nx.est - now) : "Arriving now");
+  }
+
+  $("toggleStops").onclick = function () {
+    var open = this.getAttribute("aria-expanded") !== "true";
+    this.setAttribute("aria-expanded", open);
+    $("timeline").hidden = !open;
+    this.querySelector("span").textContent = open ? "Hide stops" : "All stops";
+  };
+
+  function lateness(s) {
+    var m = Math.round((s.est - s.sched) / 60000);
+    if (m >= 5) return { txt: m + " min late", cls: "late" };
+    if (m <= -5) return { txt: -m + " min early", cls: "early" };
+    return { txt: "On time", cls: "ontime" };
+  }
+  function ago(d) {
+    var s = Math.max(0, Math.round((Date.now() - d) / 1000));
+    return s < 60 ? s + " s ago" : Math.round(s / 60) + " min ago";
+  }
+
+  function renderTrip(now) {
+    var M = model(now), stops = M.stops;
+    if (!stops.length) return;
+    var first = stops[0], last = stops[stops.length - 1];
+    setDest(last.name);
+    var span = Math.max(1, last.sched - first.sched);
+    var multiDay = first.sched.toDateString() !== last.est.toDateString();
+    var stamp = function (d) { return (multiDay ? day(d) + " " : "") + fmt(d); };
+    var pos = function (s) { return (s.sched - first.sched) / span * 100; };
+    var gone = function (s) { return s.state === "departed" || s.state === "skipped"; };
+
+    // next = first stop not yet left behind
+    var nextIdx = -1;
+    for (var i = 0; i < stops.length; i++) { if (!gone(stops[i])) { nextIdx = i; break; } }
+    if (M.live && M.src.finished) nextIdx = -1;
+    var done = nextIdx === -1 ? stops.length : nextIdx;
+    var nx = nextIdx === -1 ? null : stops[nextIdx];
+    var atStop = nx && nx.state === "arrived";
+
+    // track ticks (rebuilt only when the stop list changes)
+    var key = stops.map(function (s) { return s.name + +s.sched; }).join("|");
+    if (key !== ticksKey) {
+      ticksKey = key;
+      $("ticks").innerHTML = stops.map(function (s) {
+        return '<span class="tick' + (s.rest ? " rest" : "") + '" style="left:' + pos(s).toFixed(2) + '%" title="' + esc(clean(s.name)) + " \u00b7 " + fmt(s.sched) + '"></span>';
+      }).join("");
+    }
+    var ticks = document.querySelectorAll("#ticks .tick");
+
+    // coach position: between the last stop left and the next one, by time
+    var pct;
+    if (!nx) pct = 100;
+    else if (nextIdx === 0 || atStop) pct = pos(nx);
+    else {
+      var prev = stops[nextIdx - 1], from = +(prev.dep || prev.est), to = +nx.est;
+      var f = to > from ? Math.max(0, Math.min(1, (now - from) / (to - from))) : 0;
+      pct = pos(prev) + f * (pos(nx) - pos(prev));
+    }
+    pct = Math.max(0, Math.min(100, pct));
+
+    var late = nx && M.live ? lateness(nx) : null;
+    if (!nx) {
+      $("nowLabel").textContent = "Arrived";
+      $("nowStop").textContent = clean(last.name);
+      $("nowTime").textContent = fmt(last.est);
+      $("nowIn").textContent = "Thanks for riding with us";
+    } else if (nextIdx === 0 && !atStop) {
+      $("nowLabel").textContent = "Boarding at";
+      $("nowStop").textContent = first.name;
+      $("nowTime").textContent = fmt(first.est);
+      $("nowIn").textContent = "Departs in " + dur(first.est - now);
+    } else {
+      $("nowLabel").textContent = atStop ? "Now at" : (nx.rest ? "Next rest stop" : "Next stop");
+      $("nowStop").textContent = clean(nx.name);
+      $("nowTime").textContent = (nx.est.toDateString() !== now.toDateString() ? day(nx.est) + " " : "") + fmt(nx.est);
+      $("nowIn").textContent = atStop ? "Arrived " + fmt(nx.est) : (nx.est > now ? "in " + dur(nx.est - now) : "Arriving now");
+    }
+    var badge = $("lateBadge");
+    badge.hidden = !late;
+    if (late) { badge.textContent = late.txt; badge.className = "late-badge " + late.cls; }
+
+    $("fill").style.width = pct.toFixed(2) + "%";
+    $("busMark").style.left = pct.toFixed(2) + "%";
+    $("track").setAttribute("aria-valuenow", Math.round(pct));
+    Array.prototype.forEach.call(ticks, function (el, i) {
+      el.classList.toggle("done", i < done);
+      el.classList.toggle("cur", i === nextIdx);
+    });
+
+    $("endA").textContent = clean(first.name);
+    $("endB").textContent = clean(last.name);
+    $("endAt").textContent = stamp(first.dep || first.est);
+    $("endBt").textContent = stamp(last.est);
+    $("stToLabel").textContent = "To " + clean(last.name).split(",")[0];
+    $("stPct").textContent = !nx ? "Arrived" : dur(last.est - now);
+    $("stStops").textContent = done + " of " + stops.length;
+    $("stArr").textContent = !nx ? "Arrived" : (last.est.toDateString() === now.toDateString() ? "" : day(last.est) + " ") + fmt(last.est);
+
+    // source line
+    var v = M.live && M.src.vehicle;
+    $("liveTag").hidden = !M.live;
+    $("liveText").textContent = M.live ? "Live" + (v && v.near ? " · " + v.near : "") : "";
+    $("fineText").textContent = M.live
+      ? "Live from the coach's tracking, updated " + ago(M.src.updated) + ". Times are estimates; your driver announces each stop."
+      : "Scheduled times for this run" + (liveUrl ? " (live tracking reconnects automatically)" : "") + ". Your driver announces each stop.";
+
+    var html = stops.map(function (s, i) {
+      var cls = i < done ? "done" : (i === nextIdx ? "next" : "");
+      var t = stamp(s.est);
+      if (M.live && Math.abs(s.est - s.sched) >= 5 * 60000) t = '<s>' + fmt(s.sched) + '</s> ' + t;
+      return '<li class="' + cls + '"><span class="d"></span><span class="n">' + esc(clean(s.name)) +
+        (s.rest ? '<span class="rest">Rest stop</span>' : "") + (s.state === "skipped" ? '<span class="rest">Skipped</span>' : "") +
+        '</span><span class="t num">' + t + "</span></li>";
+    }).join("");
+    if ($("timeline").innerHTML !== html) $("timeline").innerHTML = html;
+    arrivePrep(nx, nextIdx, now);
+  }
+
+  // ---- rest stop timer ----
+  var KEY = "pt-backby", KEY0 = "pt-backby-set", C = 326.7;
+  var target = null, setAt = null, saved = store(KEY);
+  if (saved) {
+    var d = new Date(+saved);
+    if (d - new Date() > -3600000) { target = d; setAt = new Date(+(store(KEY0) || Date.now())); } else store(KEY, null);
+  }
+  $("setTimer").onclick = function () {
+    var v = $("backBy").value; if (!v) { $("backBy").focus(); return; }
+    var hm = v.split(":").map(Number), now = new Date();
+    var t = new Date(now.getFullYear(), now.getMonth(), now.getDate(), hm[0], hm[1]);
+    if (t - now < -5 * 60000) t.setDate(t.getDate() + 1);   // a past time means tomorrow
+    target = t; setAt = now; store(KEY, String(+t)); store(KEY0, String(+now)); tick();
+  };
+  $("clearTimer").onclick = function () { target = null; store(KEY, null); store(KEY0, null); $("backBy").value = ""; tick(); };
+
+  function renderTimer(now) {
+    var on = !!target;
+    $("clearTimer").hidden = !on;
+    $("ring").classList.remove("late");
+    if (!on) { $("ringTime").textContent = "--:--"; $("ringSub").textContent = "not set"; $("ringFg").style.strokeDashoffset = C; return; }
+    if (!$("backBy").value) $("backBy").value = pad(target.getHours()) + ":" + pad(target.getMinutes());
+    var ms = target - now, late = ms < 0, s = Math.abs(Math.round(ms / 1000));
+    var total = Math.max(60000, target - setAt);
+    var frac = late ? 1 : Math.max(0, Math.min(1, ms / total));
+    $("ringFg").style.strokeDashoffset = (C * (1 - frac)).toFixed(1);
+    $("ringTime").textContent = Math.floor(s / 60) + ":" + pad(s % 60);
+    $("ringSub").textContent = late ? "board now" : "until " + fmt(target);
+    $("ring").classList.toggle("late", late);
+  }
+
+  // ---- active tab while scrolling ----
+  var tabs = Array.prototype.slice.call(document.querySelectorAll("nav.tabs a"));
+  function markTab() {
+    var y = window.scrollY + 140, cur = tabs[0];
+    tabs.forEach(function (a) { var sec = document.querySelector(a.getAttribute("href")); if (sec && sec.offsetTop <= y) cur = a; });
+    tabs.forEach(function (a) { a.classList.toggle("active", a === cur); });
+  }
+  window.addEventListener("scroll", markTab, { passive: true });
+
+  // ---- cabin lights + larger text (remembered on this phone) ----
+  var root = document.documentElement;
+  function pref(k, v) { return store("pt-" + k, v); }
+  function isNightHour(d) { var h = d.getHours(); return h >= 21 || h < 6; }
+  function applyCabin(now) {
+    var lp = pref("lights"), night = lp === "down" ? true : lp === "up" ? false : isNightHour(now);
+    root.classList.toggle("night", night);
+    $("lightsBtn").setAttribute("aria-pressed", night);
+    $("lightsSwitch").setAttribute("aria-checked", night);
+    var big = pref("text") === "big";
+    root.classList.toggle("big", big);
+    $("textBtn").setAttribute("aria-pressed", big);
+    $("textSwitch").setAttribute("aria-checked", big);
+    var h = now.getHours(), driver = T.driver || liveDriver;
+    if (night && (h >= 21 || h < 5)) {
+      $("greeting").textContent = "Good night";
+      $("subgreet").textContent = "The cabin lights are down. Headphones on, voices low, and rest well.";
+    } else {
+      $("greeting").textContent = h < 5 ? "Welcome aboard" : h < 12 ? "Good morning" : h < 17 ? "Good afternoon" : "Good evening";
+      $("subgreet").textContent = driver ? "Your driver today is " + driver + ". Everything for your trip is right here."
+        : "Sit back and enjoy the ride. Everything for your trip is right here.";
+    }
+  }
+  function toggleLights() {
+    var on = !root.classList.contains("night");
+    // Store an explicit choice only when it differs from the automatic one.
+    pref("lights", on === isNightHour(new Date()) ? null : (on ? "down" : "up"));
+    applyCabin(new Date());
+  }
+  function toggleText() { pref("text", root.classList.contains("big") ? null : "big"); applyCabin(new Date()); }
+  $("lightsBtn").onclick = $("lightsSwitch").onclick = toggleLights;
+  $("textBtn").onclick = $("textSwitch").onclick = toggleText;
+  applyCabin(new Date());
+
+  // ---- sleep sounds: generated on the phone, nothing to download ----
+  var audio = null, current = null, offTimer = null;
+  function noiseBuffer(ctx, kind) {
+    var len = ctx.sampleRate * 6, buf = ctx.createBuffer(2, len, ctx.sampleRate);
+    for (var ch = 0; ch < 2; ch++) {
+      var d = buf.getChannelData(ch), last = 0;
+      for (var i = 0; i < len; i++) {
+        var w = Math.random() * 2 - 1;
+        if (kind === "brown") { last = (last + 0.02 * w) / 1.02; d[i] = last * 3.5; } else d[i] = w * 0.5;
+      }
+    }
+    return buf;
+  }
+  function startSound(name) {
+    var Ctx = window.AudioContext || window.webkitAudioContext;
+    if (!Ctx) return;
+    if (!audio) {
+      var ctx = new Ctx(), master = ctx.createGain();
+      master.gain.value = 0; master.connect(ctx.destination);
+      audio = { ctx: ctx, master: master, brown: noiseBuffer(ctx, "brown"), white: noiseBuffer(ctx, "white"), nodes: [] };
+    }
+    stopNodes();
+    var c = audio.ctx, out = c.createGain(), nodes = [out];
+    out.connect(audio.master);
+    function src(buf) { var s = c.createBufferSource(); s.buffer = buf; s.loop = true; nodes.push(s); return s; }
+    function filt(type, f, q) { var b = c.createBiquadFilter(); b.type = type; b.frequency.value = f; if (q) b.Q.value = q; nodes.push(b); return b; }
+    if (name === "hum") {                       // low, even engine-and-road hum
+      var s = src(audio.brown), lp = filt("lowpass", 320);
+      s.connect(lp); lp.connect(out); out.gain.value = 0.9; s.start();
+    } else if (name === "rain") {               // soft, steady hiss
+      var r = src(audio.white), hp = filt("highpass", 900), lp2 = filt("lowpass", 6500);
+      r.connect(hp); hp.connect(lp2); lp2.connect(out); out.gain.value = 0.22; r.start();
+    } else {                                    // slow swells
+      var o = src(audio.brown), lp3 = filt("lowpass", 700), swell = c.createGain(), lfo = c.createOscillator(), depth = c.createGain();
+      nodes.push(swell, lfo, depth);
+      swell.gain.value = 0.55; lfo.frequency.value = 0.09; depth.gain.value = 0.45;
+      lfo.connect(depth); depth.connect(swell.gain);
+      o.connect(lp3); lp3.connect(swell); swell.connect(out); out.gain.value = 0.9; o.start(); lfo.start();
+    }
+    audio.nodes = nodes;
+    if (c.state === "suspended") c.resume();
+    fadeTo(volume(), 1.5);
+    current = name;
+    armTimer();
+    paintSounds();
+  }
+  function volume() { return Math.pow($("vol").value / 100, 2) * 0.9; }
+  function fadeTo(v, secs) {
+    if (!audio) return;
+    var g = audio.master.gain, t = audio.ctx.currentTime;
+    g.cancelScheduledValues(t); g.setValueAtTime(g.value, t); g.linearRampToValueAtTime(v, t + secs);
+  }
+  function stopNodes() { if (audio) audio.nodes.forEach(function (n) { try { n.stop && n.stop(); } catch (e) {} try { n.disconnect(); } catch (e) {} }); }
+  function stopSound(secs) {
+    if (!audio || !current) return;
+    clearTimeout(offTimer);
+    fadeTo(0, secs || 1);
+    var was = current; current = null; paintSounds();
+    setTimeout(function () { if (!current) { stopNodes(); if (audio) audio.ctx.suspend(); } }, ((secs || 1) + 0.2) * 1000);
+    return was;
+  }
+  function armTimer() {
+    clearTimeout(offTimer);
+    var mins = +$("sleepTimer").value;
+    if (mins) offTimer = setTimeout(function () { stopSound(60); }, mins * 60000);   // fade out over a minute
+  }
+  function paintSounds() {
+    Array.prototype.forEach.call(document.querySelectorAll("[data-sound]"), function (b) { b.setAttribute("aria-pressed", b.getAttribute("data-sound") === current); });
+  }
+  Array.prototype.forEach.call(document.querySelectorAll("[data-sound]"), function (b) {
+    b.onclick = function () { var n = b.getAttribute("data-sound"); if (current === n) stopSound(1); else startSound(n); };
+  });
+  $("vol").oninput = function () { if (current) fadeTo(volume(), 0.2); };
+  $("sleepTimer").onchange = function () { if (current) armTimer(); };
+
+  var lastCabinMin = -1;
+  function tick() {
+    var now = new Date();
+    $("clock").textContent = fmt(now);
+    if (now.getMinutes() !== lastCabinMin) { lastCabinMin = now.getMinutes(); applyCabin(now); }
+    renderTrip(now);
+    renderTimer(now);
+  }
+  tick(); markTab();
+  setInterval(tick, 1000);
+})();
+</script>
+</body>
+</html>
